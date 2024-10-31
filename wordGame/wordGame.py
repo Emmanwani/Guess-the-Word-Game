@@ -6,6 +6,15 @@ def load_words(filename="dictionary.txt"):
         words = [line.strip().lower() for line in file if line.strip().isalpha()]
     return words
 
+# Load words for test level with a smaller list
+def load_test_words(filename="test.txt"):
+    with open(filename, "r") as file:
+        words = [line.strip().lower() for line in file if line.strip().isalpha()]
+    return words
+
+
+    
+
 # Function to partition words by word families based on the guessed letter
 def get_word_families(word_list, guess, current_progress):
     families = {}
@@ -22,14 +31,15 @@ def get_word_families(word_list, guess, current_progress):
 
 # Function to select the largest word family
 def choose_largest_family(families):
-    # Return the family with the most words
-    largest_family_pattern = max(families, key=lambda k: len(families[k]))
-    return families[largest_family_pattern], largest_family_pattern
+    # Ensure families is not empty before finding the largest
+    if families:
+        largest_family_pattern = max(families, key=lambda k: len(families[k]))
+        return families[largest_family_pattern], largest_family_pattern
+    else:
+        return [], ""  # Return empty list and pattern if families is empty
 
-# Function to start the game
-def start_game():
-    # Load the dictionary and filter by word length
-    word_list = load_words()
+# Function to start the game in EASY mode
+def start_easy_mode(word_list, show_families=False):
     word_length = random.randint(4, 12)
     word_family = [word for word in word_list if len(word) == word_length]
     
@@ -57,8 +67,21 @@ def start_game():
         # Partition words into families based on the guessed letter
         families = get_word_families(word_family, guess, guessed_word)
         
-        # Choose the largest word family to maximize ambiguity
+        # Show families if in test mode
+        if show_families:
+            print("\nCurrent Word Families:")
+            for pattern, words in families.items():
+                print(f"{pattern}: {words}")
+            print("\n")
+        
+        # Choose the largest word family
         word_family, new_progress_pattern = choose_largest_family(families)
+        
+        # Handle the case where families is empty
+        if not word_family:  # If no valid families found
+            remaining_guesses -= 1
+            print(f"No words match your guess '{guess}'. You have {remaining_guesses} guesses left.\n")
+            continue  # Go to the next guess
         
         # Check if the new pattern includes the guessed letter
         if new_progress_pattern == "".join(guessed_word):  # No match, wrong guess
@@ -79,5 +102,27 @@ def start_game():
         final_word = random.choice(word_family)  # Choose any word from the remaining list
         print(f"Sorry, you've run out of guesses. The word was: {final_word}\n")
 
+# Main function to select difficulty
+def main():
+    # Prompt for difficulty selection
+    while True:
+        difficulty = input("Choose difficulty - Easy (E), Hard (H), or enter code for Test Level: ").strip().upper()
+        
+        if difficulty == "E":
+            print("Starting Easy Mode...\n")
+            word_list = load_words()
+            start_easy_mode(word_list)
+            break
+        elif difficulty == "H":
+            print("Hard Mode will be implemented soon.\n")  # Placeholder for future development
+            break
+        elif difficulty == "MOD004553":
+            print("Starting Test Level...\n")
+            test_word_list = load_test_words()
+            start_easy_mode(test_word_list, show_families=True)
+            break
+        else:
+            print("Invalid selection. Please choose 'E', 'H', or enter the code for Test Level.\n")
+
 # Run the game
-start_game()
+main()
